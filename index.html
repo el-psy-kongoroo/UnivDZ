@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UnivDZ – Portail Universitaire Algérien</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="header">
+    <div class="header-inner">
+
+      <div class="logo">
+        <span class="logo-icon">🎓</span>
+        <div class="logo-text">
+          <span class="logo-title">UnivDZ</span>
+          <span class="logo-subtitle">Portail Universitaire Algérien</span>
+        </div>
+      </div>
+
+      <div class="search-container">
+        <div class="search-bar">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="searchInput"
+                 placeholder="Rechercher une université, une formation, une ville…"
+                 autocomplete="off" />
+          <button class="search-btn" id="searchBtn">Rechercher</button>
+        </div>
+      </div>
+
+      <div class="header-stats">
+        <div class="stat">
+          <span class="stat-num" id="statUnivs">42</span>
+          <span class="stat-label">Universités</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" id="statFormations">38</span>
+          <span class="stat-label">Formations</span>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ===================== LAYOUT ===================== -->
+  <div class="main-container">
+
+    <!-- ---- LEFT SIDEBAR ---- -->
+    <aside class="sidebar" id="sidebar">
+
+      <div class="sidebar-header">
+        <h3><i class="fas fa-filter"></i> Filtres</h3>
+        <button class="reset-filters" id="resetFilters">
+          <i class="fas fa-rotate-left"></i> Réinitialiser
+        </button>
+      </div>
+
+      <div class="results-count" id="resultsCount">
+        <i class="fas fa-circle-info"></i>
+        <span id="countText">42 universités · 38 formations</span>
+      </div>
+
+      <!-- Wilaya filter -->
+      <div class="filter-section">
+        <div class="filter-title" onclick="toggleFilter('cities')">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>Wilaya / Ville</span>
+          <i class="fas fa-chevron-down filter-arrow" id="arrow-cities"></i>
+        </div>
+        <div class="filter-body open" id="filter-cities">
+          <input type="text" class="filter-search" id="citySearch"
+                 placeholder="Rechercher une wilaya…" />
+          <div class="checkbox-list" id="cityList"></div>
+        </div>
+      </div>
+
+      <!-- Formation type filter -->
+      <div class="filter-section">
+        <div class="filter-title" onclick="toggleFilter('types')">
+          <i class="fas fa-graduation-cap"></i>
+          <span>Type de Formation</span>
+          <i class="fas fa-chevron-down filter-arrow open" id="arrow-types"></i>
+        </div>
+        <div class="filter-body open" id="filter-types">
+          <div class="checkbox-list" id="typeList"></div>
+        </div>
+      </div>
+
+      <!-- Bac type filter -->
+      <div class="filter-section">
+        <div class="filter-title" onclick="toggleFilter('bac')">
+          <i class="fas fa-certificate"></i>
+          <span>Type de Baccalauréat</span>
+          <i class="fas fa-chevron-down filter-arrow open" id="arrow-bac"></i>
+        </div>
+        <div class="filter-body open" id="filter-bac">
+          <div class="bac-options">
+            <label class="bac-label">
+              <input type="checkbox" name="bac" value="S" id="bacS" />
+              <span class="bac-badge bac-s">Bac S</span>
+              <span class="bac-desc">Scientifique</span>
+            </label>
+            <label class="bac-label">
+              <input type="checkbox" name="bac" value="M" id="bacM" />
+              <span class="bac-badge bac-m">Bac M</span>
+              <span class="bac-desc">Mathématiques</span>
+            </label>
+            <label class="bac-label">
+              <input type="checkbox" name="bac" value="MT" id="bacMT" />
+              <span class="bac-badge bac-mt">Bac MT</span>
+              <span class="bac-desc">Math-Technique</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Average filter -->
+      <div class="filter-section">
+        <div class="filter-title" onclick="toggleFilter('avg')">
+          <i class="fas fa-chart-bar"></i>
+          <span>Moyenne Maximale Requise</span>
+          <i class="fas fa-chevron-down filter-arrow open" id="arrow-avg"></i>
+        </div>
+        <div class="filter-body open" id="filter-avg">
+          <div class="range-container">
+            <div class="range-label-row">
+              <span>Afficher les formations ≤</span>
+              <strong id="avgValue">20.00</strong>
+            </div>
+            <input type="range" id="avgFilter" min="10" max="20" step="0.25" value="20" />
+            <div class="range-labels">
+              <span>10</span><span>15</span><span>20</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ---- MAIN CONTENT ---- -->
+    <main class="content" id="mainContent">
+
+      <!-- Tabs -->
+      <div class="tabs-container">
+        <div class="tabs">
+          <button class="tab active" data-tab="map">
+            <i class="fas fa-map"></i> Carte Interactive
+          </button>
+          <button class="tab" data-tab="formations">
+            <i class="fas fa-book-open"></i> Formations
+            <span class="tab-count" id="formationsTabCount">38</span>
+          </button>
+          <button class="tab" data-tab="universities">
+            <i class="fas fa-university"></i> Universités
+            <span class="tab-count" id="universitiesTabCount">42</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- MAP TAB -->
+      <div class="tab-content active" id="tab-map">
+        <div id="map"></div>
+      </div>
+
+      <!-- FORMATIONS TAB -->
+      <div class="tab-content" id="tab-formations">
+        <div class="cards-toolbar">
+          <span id="formationsResultText">38 formations trouvées</span>
+          <div class="view-toggle">
+            <button class="view-btn active" id="fGridBtn" onclick="setFormationsView('grid')" title="Grille">
+              <i class="fas fa-th-large"></i>
+            </button>
+            <button class="view-btn" id="fListBtn" onclick="setFormationsView('list')" title="Liste">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+        </div>
+        <div class="cards-grid" id="formationsGrid"></div>
+      </div>
+
+      <!-- UNIVERSITIES TAB -->
+      <div class="tab-content" id="tab-universities">
+        <div class="cards-toolbar">
+          <span id="universitiesResultText">42 universités trouvées</span>
+          <div class="view-toggle">
+            <button class="view-btn active" id="uGridBtn" onclick="setUnivView('grid')" title="Grille">
+              <i class="fas fa-th-large"></i>
+            </button>
+            <button class="view-btn" id="uListBtn" onclick="setUnivView('list')" title="Liste">
+              <i class="fas fa-list"></i>
+            </button>
+          </div>
+        </div>
+        <div class="cards-grid" id="universitiesGrid"></div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ===================== MODAL ===================== -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
