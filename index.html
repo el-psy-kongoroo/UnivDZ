@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Portail des universités algériennes — Explorez toutes les licences, formations et universités d'Algérie sur une carte interactive." />
+  <title>UnivDZ — Portail Universitaire Algérien</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin="" />
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════════════ -->
+  <header id="header">
+    <div class="logo">
+      <div class="logo-icon">🎓</div>
+      <div class="logo-text">Univ<span>DZ</span></div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="search"
+        id="searchInput"
+        placeholder="Chercher une formation, une université, une filière…"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Recherche" />
+      <button id="clearSearch" aria-label="Effacer la recherche">✕</button>
+    </div>
+
+    <!-- Stats badges -->
+    <div class="header-stats" role="status" aria-live="polite">
+      <span class="badge">🏛 <strong id="badgeUnivs">0</strong> universités</span>
+      <span class="badge">📚 <strong id="badgeFormations">0</strong> formations</span>
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════════════════
+       APP LAYOUT
+  ══════════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- ── Sidebar ─────────────────────────────── -->
+    <aside id="sidebar" aria-label="Filtres de recherche">
+
+      <div class="sidebar-header">
+        <span class="sidebar-title">⚙ Filtres</span>
+        <button id="resetFilters" title="Réinitialiser tous les filtres">Réinitialiser</button>
+      </div>
+
+      <!-- Active filter chips -->
+      <div id="activeFilters" aria-label="Filtres actifs"></div>
+
+      <!-- Wilaya -->
+      <div class="filter-section">
+        <div class="filter-label">📍 Wilaya / Ville</div>
+        <select id="filterWilaya" class="filter-select" aria-label="Filtrer par wilaya">
+          <option value="">Toutes les wilayas</option>
+        </select>
+      </div>
+
+      <!-- Domain / Filière -->
+      <div class="filter-section">
+        <div class="filter-label">📚 Domaine de formation</div>
+        <select id="filterDomain" class="filter-select" aria-label="Filtrer par domaine">
+          <option value="">Tous les domaines</option>
+        </select>
+      </div>
+
+      <!-- Bac type -->
+      <div class="filter-section">
+        <div class="filter-label">🎓 Type de Bac</div>
+        <ul id="bacCheckList" class="filter-check-list" aria-label="Filtrer par type de baccalauréat">
+          <!-- Populated by JS -->
+        </ul>
+      </div>
+
+      <!-- Average slider -->
+      <div class="filter-section">
+        <div class="filter-label">📊 Moyenne minimale</div>
+        <input
+          type="range"
+          id="avgRange"
+          min="10"
+          max="19"
+          step="0.25"
+          value="10"
+          aria-label="Moyenne minimale de bac" />
+        <div class="avg-display">
+          <span id="avgDisplay">Moyenne min : <strong>10.00 / 20</strong></span>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="filter-section" style="border-bottom:none;margin-top:auto;">
+        <div class="filter-label">🗺 Légende carte</div>
+        <div style="display:flex;flex-direction:column;gap:.4rem;font-size:.8rem;color:var(--gray-500);">
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span style="width:12px;height:12px;background:#006233;border-radius:50%;display:inline-block;"></span>
+            Université
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span style="width:12px;height:12px;background:#2563eb;border-radius:50%;display:inline-block;"></span>
+            École
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem;">
+            <span style="width:12px;height:12px;background:#f59e0b;border-radius:50%;display:inline-block;"></span>
+            Centre Universitaire
+          </div>
+        </div>
+      </div>
+
+    </aside>
+    <!-- end sidebar -->
+
+    <!-- ── Main content ────────────────────────── -->
+    <main id="main">
+
+      <!-- View tabs -->
+      <nav id="viewTabs" aria-label="Vues disponibles">
+        <button class="view-tab active" data-view="map">🗺 Carte</button>
+        <button class="view-tab" data-view="grid">📋 Formations</button>
+        <span id="resultsCount" aria-live="polite"></span>
+      </nav>
+
+      <!-- MAP panel -->
+      <section id="mapPanel" aria-label="Carte des universités algériennes">
+        <div id="map"></div>
+      </section>
+
+      <!-- GRID panel -->
+      <section id="gridPanel" aria-label="Liste des formations">
+        <div class="section-head">
+          <h2 class="section-title">📋 Licences disponibles après le Bac algérien</h2>
+        </div>
+        <div id="formationsGrid" role="list">
+          <!-- Formation cards rendered by JS -->
+        </div>
+      </section>
+
+    </main>
+    <!-- end main -->
+
+  </div>
+  <!-- end app -->
+
+  <!-- ── Mobile sidebar toggle ────────────────── -->
+  <button id="sidebarToggle" aria-label="Afficher/masquer les filtres">⚙</button>
+
+  <!-- ══════════════════════════════════════════════
+       MODAL
+  ══════════════════════════════════════════════ -->
+  <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-icon" id="modalIcon">🎓</span>
+        <div class="modal-title-group">
+          <div class="modal-domain" id="modalDomain"></div>
+          <h2 class="modal-title" id="modalTitle"></h2>
+        </div>
+        <button id="modalClose" aria-label="Fermer">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SCRIPTS
+  ══════════════════════════════════════════════ -->
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLs="
+    crossorigin=""></script>
+
+  <!-- Data -->
+  <script src="js/data.js"></script>
+
+  <!-- App -->
+  <script src="js/app.js"></script>
+</body>
+</html>
